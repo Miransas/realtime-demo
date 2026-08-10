@@ -3,7 +3,7 @@ defmodule RealtimeEngine.DbListener do
   use GenServer
   require Logger
 
-  @default_channel "realtime_channels"
+  @default_channel "realtime_events"
   @reconnect_initial 1_000
 
   def start_link(_opts) do
@@ -13,7 +13,8 @@ defmodule RealtimeEngine.DbListener do
   def init(state) do
     opts = Application.get_env(:realtime_engine, :postgres, [])
     channel = Application.get_env(:realtime_engine, :pg_channel, @default_channel)
-    state = %{state | opts: opts, channel: channel, backoff: @reconnect_initial}
+    Process.flag(:trap_exit, true)
+    state = %{state | opts: opts, channel: channel, backoff: @reconnect_initial, mon_ref: nil}
     send(self(), :connect)
     {:ok, state}
   end
@@ -22,9 +23,11 @@ defmodule RealtimeEngine.DbListener do
     case Postgrex.Notifications.start_link(opts) do
       {:ok, pid} ->
         try do
+          # monitor and listen
+          mon_ref = Process.monitor(pid)
           Postgrex.Notifications.listen!(pid, channel)
           Logger.info("DbListener subscribed to #{channel}")
-          {:noreply, %{state | pid: pid, backoff: @reconnect_initial}}
+          {:noreply, %{state | pid: pid, mon_ref: mon_ref, backoff: @reconnect_initial}}
         rescue
           e ->
             Logger.error("Failed to listen on #{channel}: #{inspect(e)}")
@@ -58,7 +61,13 @@ defmodule RealtimeEngine.DbListener do
   def handle_info({:DOWN, _ref, :process, _pid, reason}, state) do
     Logger.warn("DbListener notifications connection down: #{inspect(reason)}, reconnecting")
     Process.send_after(self(), :connect, state.backoff)
-    {:noreply, %{state | pid: nil, backoff: min(state.backoff * 2, 60_000)}}
+    {:noreply, %{state | pid: nil, mon_ref: nil, backoff: min(state.backoff * 2, 60_000)}}
+  end
+
+  def handle_info({:EXIT, _pid, reason}, state) do
+    Logger.warn("DbListener linked process exited: #{inspect(reason)}, reconnecting")
+    Process.send_after(self(), :connect, state.backoff)
+    {:noreply, %{state | pid: nil, mon_ref: nil, backoff: min(state.backoff * 2, 60_000)}}
   end
 
   def handle_info(msg, state) do

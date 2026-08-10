@@ -3,31 +3,30 @@
 
 Minimal production-friendly realtime service using PostgreSQL LISTEN/NOTIFY and Phoenix.PubSub.
 
-Quick start
 
-1. Install dependencies:
+Quick start (local with Docker)
+
+1. Start services with Docker Compose (this will run Postgres and start the Elixir app in the container):
 
 ```bash
-mix deps.get
+docker compose up --build
 ```
 
-2. Configure PostgreSQL connection via environment variables (optional):
+2. Or run locally if you have Elixir installed:
 
 ```bash
 export PG_HOST=localhost
 export PG_USER=postgres
-export PG_PASS=yourpass
-export PG_DB=yourdb
-export PG_CHANNEL=realtime:changes
-```
+export PG_PASS=postgres
+export PG_DB=realtime_db
+export PG_CHANNEL=realtime_events
 
-3. Run the server:
-
-```bash
+mix deps.get
+mix compile
 mix run --no-halt
 ```
 
-Server listens on the port configured in `config/config.exs` (default `4000`) at `/ws` (ws://localhost:4000/ws).
+Server listens on the port configured in `config/config.exs` (default `4000`) at `/` (http://localhost:4000/) and websocket endpoint `/socket` (ws://localhost:4000/socket).
 
 WebSocket protocol (JSON):
 

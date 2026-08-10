@@ -45,7 +45,7 @@ defmodule RealtimeEngine.Repo do
   end
 
   @doc "Execute a simple query via the repo process. Returns Postgrex result or error."
-  def query(sql, params \ []) do
+  def query(sql, params \\ []) do
     GenServer.call(__MODULE__, {:query, sql, params})
   end
 end

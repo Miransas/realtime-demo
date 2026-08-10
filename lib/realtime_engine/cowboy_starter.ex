@@ -13,8 +13,8 @@ defmodule RealtimeEngine.CowboyStarter do
 
     dispatch = :cowboy_router.compile([
       {:_, [
-        {"/ws", RealtimeEngineWeb.UserSocket, []},
-        {"/", :cowboy_static, {:priv_dir, :realtime_engine, "static/index.html"}},
+        {"/socket", RealtimeEngineWeb.SocketHandler, []},
+        {"/", RealtimeEngineWeb.RootHandler, []},
         {"/[...]", :cowboy_static, {:priv_dir, :realtime_engine, "static"}}
       ]}
     ])
