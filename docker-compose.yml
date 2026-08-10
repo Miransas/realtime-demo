@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: realtime_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./priv/repo/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  app:
+    image: elixir:1.14
+    working_dir: /app
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+    environment:
+      - MIX_ENV=dev
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASS=postgres
+      - PG_DB=realtime_db
+      - PG_CHANNEL=realtime_events
+    ports:
+      - '4000:4000'
+    command: sh -c "mix deps.get && mix compile && mix run --no-halt"
+
+volumes:
+  db_data:
