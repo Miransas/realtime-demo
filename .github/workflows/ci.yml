@@ -11,17 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up Erlang/Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: "1.14"
+          elixir-version: "1.20.3" # Yerel ortamındaki güncel Elixir sürümü
+          otp-version: "29"        # Elixir 1.20.3 ile uyumlu Erlang sürümü
+          
       - name: Install Hex & Rebar
         run: |
           mix local.hex --force
           mix local.rebar --force
+          
       - name: Get dependencies
         run: mix deps.get
+        
       - name: Compile
-        run: mix compile
+        # Kodda herhangi bir uyarı (warning) varsa bile CI'ın başarısız sayılması 
+        # için opsiyonel olarak '--warnings-as-errors' bayrağı eklenebilir.
+        run: mix compile --warnings-as-errors 
+        
       - name: Run tests
         run: mix test
