@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Realtime Engine Test Client</title>
+  </head>
+  <body>
+    <h1>Realtime Engine JS Client</h1>
+    <div>
+      <label>Topic: <input id="topic" value="room:global" /></label>
+      <button id="join">Join</button>
+      <button id="leave">Leave</button>
+    </div>
+    <pre id="log" style="height:400px;overflow:auto;border:1px solid #ccc;padding:8px"></pre>
+
+    <script>
+      const logEl = document.getElementById('log')
+      function log(s){ logEl.textContent += s + '\n' }
+
+      const ws = new WebSocket('ws://' + location.host + '/ws')
+      ws.addEventListener('open', () => log('connected'))
+      ws.addEventListener('message', (e) => log('recv: ' + e.data))
+      ws.addEventListener('close', () => log('closed'))
+      ws.addEventListener('error', (e) => log('error: ' + e))
+
+      document.getElementById('join').onclick = () => {
+        const topic = document.getElementById('topic').value
+        ws.send(JSON.stringify({action:'join', topic}))
+        log('sent join ' + topic)
+      }
+      document.getElementById('leave').onclick = () => {
+        const topic = document.getElementById('topic').value
+        ws.send(JSON.stringify({action:'leave', topic}))
+        log('sent leave ' + topic)
+      }
+    </script>
+  </body>
+</html>

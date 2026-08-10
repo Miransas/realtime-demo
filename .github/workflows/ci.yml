@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Erlang/Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.14"
+      - name: Install Hex & Rebar
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+      - name: Get dependencies
+        run: mix deps.get
+      - name: Compile
+        run: mix compile
+      - name: Run tests
+        run: mix test

@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>WebSocket Example</title>
+  </head>
+  <body>
+    <h1>WebSocket JS Client</h1>
+    <input id="msg" placeholder="Message" />
+    <button id="send">Send</button>
+    <pre id="log"></pre>
+
+    <script>
+      const log = (s) => document.getElementById('log').textContent += s + '\n'
+      const ws = new WebSocket('ws://localhost:4000/ws')
+      ws.addEventListener('open', () => log('Connected'))
+      ws.addEventListener('message', (e) => log('Received: ' + e.data))
+
+      document.getElementById('send').onclick = () => {
+        const v = document.getElementById('msg').value
+        ws.send(v)
+        log('Sent: ' + v)
+      }
+    </script>
+  </body>
+</html>
